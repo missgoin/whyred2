@@ -25,7 +25,7 @@ THIN_LTO=0
 
 # Files
 IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
-DTBO=$(pwd)/out/arch/arm64/boot/dtbo.img
+#DTBO=$(pwd)/out/arch/arm64/boot/dtbo.img
 #DTB=$(pwd)/out/arch/arm64/boot/dts/qcom
 
 # Verbose Build
@@ -48,7 +48,7 @@ FINAL_ZIP_ALIAS=Karenulwhyre-${TANGGAL}.zip
 ##----------------------------------------------------------##
 # Specify compiler.
 
-COMPILER=azure
+COMPILER=neutron
 
 ##----------------------------------------------------------##
 # Specify Linker
@@ -64,11 +64,6 @@ function cloneTC() {
 	then
 	git clone --depth=1 https://gitlab.com/ElectroPerf/atom-x-clang.git clang
 	PATH="${KERNEL_DIR}/clang/bin:$PATH"
-
-    elif [ $COMPILER = "neutron" ];
-    then
-    git clone --depth=1 https://gitlab.com/dakkshesh07/neutron-clang.git clang
-    PATH="${KERNEL_DIR}/clang/bin:$PATH"
     
     elif [ $COMPILER = "trb" ];
     then
@@ -79,6 +74,18 @@ function cloneTC() {
     then
     git clone --depth=1 https://github.com/greenforce-project/clang-llvm.git -b main clang
     PATH="${KERNEL_DIR}/clang/bin:$PATH"
+    
+    elif [ $COMPILER = "neutron" ];
+    then
+    #git clone --depth=1 https://github.com/greenforce-project/clang-llvm.git -b main clang
+    mkdir -p clang/
+      curl -s https://api.github.com/repos/Neutron-Toolchains/clang-build-catalogue/releases/latest \
+      | grep "browser_download_url.*tar.zst" \
+      | cut -d : -f 2,3 \
+      | tr -d \" \
+      | wget --output-document=neutron.tar.zst -qi -     
+      tar -xf neutron.tar.zst -C neutron/ || exit 1
+    PATH="${KERNEL_DIR}/neutron/bin:$PATH"
     
     elif [ $COMPILER = "cosmic" ];
     then
@@ -155,7 +162,12 @@ function exports() {
            then
                export KBUILD_COMPILER_STRING=$(${KERNEL_DIR}/cosmic-clang/bin/clang --version | head -n 1 | sed -e 's/  */ /g' -e 's/[[:space:]]*$//' -e 's/^.*clang/clang/')
                export LD_LIBRARY_PATH="${KERNEL_DIR}/cosmic-clang/lib:$LD_LIBRARY_PATH"
-               
+         
+         elif [ -d ${KERNEL_DIR}/neutron ];
+           then
+               export KBUILD_COMPILER_STRING=$(${KERNEL_DIR}/neutron/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
+               export LD_LIBRARY_PATH="${KERNEL_DIR}/neutron/lib:$LD_LIBRARY_PATH"
+     
         ##elif [ -d ${KERNEL_DIR}/sdclang ];
            #then
                #export KBUILD_COMPILER_STRING=$(${KERNEL_DIR}/sdclang/bin/clang --version | head -n 1 | sed -e 's/  */ /g' -e 's/[[:space:]]*$//' -e 's/^.*clang/clang/')
@@ -219,7 +231,8 @@ function compile() {
 START=$(date +"%s")
 		
 	# Compile
-	make O=out ARCH=arm64 ${DEFCONFIG}
+	make O=out ARCH=arm64 ${DEFCONFIG} -kj$(nproc --all) CC=clang LD=ld.lld LD=${LINKER} AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=out
+
 	if [ -d ${KERNEL_DIR}/clang ];
 	   then
 	       make -kj$(nproc --all) O=out \
@@ -270,6 +283,23 @@ START=$(date +"%s")
 	       OBJDUMP=llvm-objdump \
 	       STRIP=llvm-strip \
 	       V=$VERBOSE 2>&1 | tee error.log
+	elif [ -d ${KERNEL_DIR}/neutron ];
+	   then
+	       make -kj$(nproc --all) O=out \
+	       ARCH=arm64 \
+	       CC=clang \
+	       CROSS_COMPILE=aarch64-linux-gnu- \
+	       CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
+	       LD=${LINKER} \
+	       LLVM=1 \
+	       #LLVM_IAS=1 \
+	       AR=llvm-ar \
+	       NM=llvm-nm \
+	       OBJCOPY=llvm-objcopy \
+	       OBJDUMP=llvm-objdump \
+	       STRIP=llvm-strip \
+	       V=$VERBOSE 2>&1 | tee error.log
+	
 	elif [ -d ${KERNEL_DIR}/gcc64 ];
 	   then
 	       make -kj$(nproc --all) O=out \
@@ -326,7 +356,7 @@ START=$(date +"%s")
 	
 	echo "**** Verify Image.gz-dtb & dtbo.img ****"
     ls $(pwd)/out/arch/arm64/boot/Image.gz-dtb
-    ls $(pwd)/out/arch/arm64/boot/dtbo.img
+    #ls $(pwd)/out/arch/arm64/boot/dtbo.img
     
 }
 
@@ -334,7 +364,7 @@ START=$(date +"%s")
 function zipping() {
 	# Copy Files To AnyKernel3 Zip
 	cp $IMAGE AnyKernel3
-	cp $DTBO AnyKernel3
+	#cp $DTBO AnyKernel3
 	#find $DTB -name "*.dtb" -exec cat {} + > AnyKernel3/dtb
 	
 	# Zipping and Push Kernel
