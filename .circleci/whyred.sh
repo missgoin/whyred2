@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+>#!/usr/bin/env bash
 
  #
  # Script For Building Android Kernel
@@ -291,7 +291,7 @@ START=$(date +"%s")
 	       CROSS_COMPILE=aarch64-linux-gnu- \
 	       CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
 	       LD=${LINKER} \
-	       LLVM=1 \
+	       #LLVM=1 \
 	       #LLVM_IAS=1 \
 	       AR=llvm-ar \
 	       NM=llvm-nm \
