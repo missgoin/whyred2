@@ -78,7 +78,15 @@ function cloneTC() {
     elif [ $COMPILER = "neutron" ];
     then
     #git clone --depth=1 https://github.com/greenforce-project/clang-llvm.git -b main clang
-    wget https://github.com/Neutron-Toolchains/clang-build-catalogue/releases/download/11032023/neutron-clang-11032023.tar.zst && mkdir clang && tar --use-compress-program=unzstd -xvf neutron-clang-11032023.tar.zst -C neutron/
+    #wget https://github.com/Neutron-Toolchains/clang-build-catalogue/releases/download/11032023/neutron-clang-11032023.tar.zst && mkdir clang && tar --use-compress-program=unzstd -xvf neutron-clang-11032023.tar.zst -C neutron/
+    mkdir neutron
+curl -s https://github.com/Neutron-Toolchains/clang-build-catalogue/releases/tag/11032023 \
+| grep "browser_download_url.*tar.zst" \
+| cut -d : -f 2,3 \
+| tr -d \" \
+| wget --output-document=neutron.tar.zst -qi -
+tar -xf neutron.tar.zst -C neutron/ || exit 1
+    
     PATH="${KERNEL_DIR}/neutron/bin:$PATH"
     
     elif [ $COMPILER = "cosmic" ];
