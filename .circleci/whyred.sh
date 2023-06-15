@@ -11,7 +11,7 @@ KERNEL_DIR="$(pwd)"
 ##----------------------------------------------------------##
 # Device Name and Model
 MODEL=Xiaomi
-DEVICE=whyred
+DEVICE=lavender
 
 # Kernel Version Code
 #VERSION=
@@ -43,12 +43,12 @@ TANGGAL=$(date +"%F%S")
 # Specify Final Zip Name
 ZIPNAME=SUPER.KERNEL
 FINAL_ZIP=${ZIPNAME}-${DEVICE}-${TANGGAL}.zip
-FINAL_ZIP_ALIAS=Karenulwhyre-${TANGGAL}.zip
+FINAL_ZIP_ALIAS=Karenullaven-${TANGGAL}.zip
 
 ##----------------------------------------------------------##
 # Specify compiler.
 
-COMPILER=neutron
+COMPILER=azure
 
 ##----------------------------------------------------------##
 # Specify Linker
@@ -242,7 +242,7 @@ START=$(date +"%s")
 	       CC=clang \
 	       CROSS_COMPILE=aarch64-linux-gnu- \
 	       CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-	       #LD=${LINKER} \
+	       LD=${LINKER} \
 	       #LLVM=1 \
 	       #LLVM_IAS=1 \
 	       AR=llvm-ar \
