@@ -43,12 +43,12 @@ TANGGAL=$(date +"%F%S")
 # Specify Final Zip Name
 ZIPNAME=SUPER.KERNEL
 FINAL_ZIP=${ZIPNAME}-${DEVICE}-${TANGGAL}.zip
-FINAL_ZIP_ALIAS=Karenullavend-${TANGGAL}.zip
+FINAL_ZIP_ALIAS=Karenullaven-${TANGGAL}.zip
 
 ##----------------------------------------------------------##
 # Specify compiler.
 
-COMPILER=xrage
+COMPILER=azure
 
 ##----------------------------------------------------------##
 # Specify Linker
@@ -78,7 +78,15 @@ function cloneTC() {
     elif [ $COMPILER = "neutron" ];
     then
     #git clone --depth=1 https://github.com/greenforce-project/clang-llvm.git -b main clang
-    wget https://github.com/Neutron-Toolchains/clang-build-catalogue/releases/download/11032023/neutron-clang-11032023.tar.zst && mkdir neutron && tar --use-compress-program=unzstd -xvf neutron-clang-11032023.tar.zst -C neutron/
+    #wget https://github.com/Neutron-Toolchains/clang-build-catalogue/releases/download/11032023/neutron-clang-11032023.tar.zst && mkdir clang && tar --use-compress-program=unzstd -xvf neutron-clang-11032023.tar.zst -C neutron/
+    mkdir neutron
+curl -s https://github.com/Neutron-Toolchains/clang-build-catalogue/releases/tag/11032023 \
+| grep "browser_download_url.*tar.zst" \
+| cut -d : -f 2,3 \
+| tr -d \" \
+| wget --output-document=neutron.tar.zst -qi -
+tar -xf neutron.tar.zst -C neutron/ || exit 1
+    
     PATH="${KERNEL_DIR}/neutron/bin:$PATH"
     
     elif [ $COMPILER = "cosmic" ];
@@ -101,11 +109,6 @@ function cloneTC() {
 	git clone --depth=1 https://github.com/kdrag0n/proton-clang.git clang
 	PATH="${KERNEL_DIR}/clang/bin:$PATH"
 	
-	elif [ $COMPILER = "xrage" ];
-	then
-	git clone --depth=1 https://github.com/xyz-prjkt/xRageTC-clang.git -b main clang
-	PATH="${KERNEL_DIR}/clang/bin:$PATH"
-	
 	elif [ $COMPILER = "sdclang" ];
 	then
     git clone --depth=1 https://github.com/ZyCromerZ/SDClang.git --single-branch --branch="14" sdclang
@@ -113,23 +116,22 @@ function cloneTC() {
 	git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9.git --single-branch --branch="lineage-19.0" gcc32
 	PATH="${KERNEL_DIR}/sdclang/bin:${KERNEL_DIR}/gcc/bin:${KERNEL_DIR}/gcc32/bin:${PATH}"
 
+	elif [ $COMPILER = "eva" ];
+	then
+	git clone --depth=1 https://github.com/mvaisakh/gcc-arm64.git -b gcc-new gcc64
+	git clone --depth=1 https://github.com/mvaisakh/gcc-arm.git -b gcc-new gcc32
+	PATH=$KERNEL_DIR/gcc64/bin/:$KERNEL_DIR/gcc32/bin/:/usr/bin:$PATH
+
 	elif [ $COMPILER = "aosp" ];
 	then
-	wget https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/7d21a2e4192728bc50841994d88637ccc45b5692/clang-r468909b.tar.gz && mkdir aosp-clang && tar -xzvf clang-r468909b.tar.gz -C aosp-clang/
-	export KERNEL_CLANG_PATH="${KERNEL_DIR}/aosp-clang"
-    export KERNEL_CLANG="clang"
-    export PATH="$KERNEL_CLANG_PATH/bin:$PATH"
-    #CLANG_VERSION=$(clang --version | grep version | sed "s|clang version ||")
-    
-	git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9.git -b lineage-19.1 gcc64
-	export KERNEL_CCOMPILE64_PATH="${KERNEL_DIR}/gcc64"
-    export KERNEL_CCOMPILE64="aarch64-linux-android-"
-    export PATH="$KERNEL_CCOMPILE64_PATH/bin:$PATH"
-	
-	git clone --depth=1 https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9.git -b lineage-19.1 gcc32
-	export KERNEL_CCOMPILE32_PATH="${KERNEL_DIR}/gcc32"
-    export KERNEL_CCOMPILE32="arm-linux-androideabi-"
-    export PATH="$KERNEL_CCOMPILE32_PATH/bin:$PATH"
+        mkdir aosp-clang
+        cd aosp-clang || exit
+	wget -q https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/ab73cd180863dbd17fdb8f20e39b33ab38030cf9/clang-r450784b.tar.gz
+        tar -xf clang*
+        cd .. || exit
+	git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9.git --depth=1 gcc
+	git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_arm_arm-linux-androideabi-4.9.git  --depth=1 gcc32
+	PATH="${KERNEL_DIR}/aosp-clang/bin:${KERNEL_DIR}/gcc/bin:${KERNEL_DIR}/gcc32/bin:${PATH}"
 	
 	fi
 	
@@ -149,7 +151,10 @@ function exports() {
            then
                export KBUILD_COMPILER_STRING=$(${KERNEL_DIR}/clang/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
                export LD_LIBRARY_PATH="${KERNEL_DIR}/clang/lib:$LD_LIBRARY_PATH"
-           
+               
+        elif [ -d ${KERNEL_DIR}/gcc64 ];
+           then
+               export KBUILD_COMPILER_STRING=$("$KERNEL_DIR/gcc64"/bin/aarch64-elf-gcc --version | head -n 1)       
         elif [ -d ${KERNEL_DIR}/cosmic ];
            then
                export KBUILD_COMPILER_STRING=$(${KERNEL_DIR}/cosmic/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')
@@ -228,7 +233,7 @@ function compile() {
 START=$(date +"%s")
 		
 	# Compile
-	make O=out ARCH=arm64 ${DEFCONFIG}
+	make O=out ARCH=arm64 ${DEFCONFIG} -kj$(nproc --all) CC=clang LD=ld.lld LD=${LINKER} AR=llvm-ar NM=llvm-nm OBJCOPY=llvm-objcopy OBJDUMP=llvm-objdump STRIP=llvm-strip O=out
 
 	if [ -d ${KERNEL_DIR}/clang ];
 	   then
@@ -248,7 +253,6 @@ START=$(date +"%s")
 	       #READELF=llvm-readelf \
 	       #OBJSIZE=llvm-size \
 	       V=$VERBOSE 2>&1 | tee error.log
-	       
 	elif [ -d ${KERNEL_DIR}/cosmic ];
 	   then
 	       make -j$(nproc --all) O=out \
@@ -256,8 +260,8 @@ START=$(date +"%s")
 	       CC=clang \
            CROSS_COMPILE=aarch64-linux-gnu- \
            CROSS_COMPILE_ARM32=arm-linux-gnueabi \
-           #LLVM=1 \
-           #LLVM_IAS=1 \
+           LLVM=1 \
+           LLVM_IAS=1 \
            #AR=llvm-ar \
            #NM=llvm-nm \
            #LD=${LINKER} \
@@ -265,7 +269,6 @@ START=$(date +"%s")
            #OBJDUMP=llvm-objdump \
            #STRIP=llvm-strip \
 	       V=$VERBOSE 2>&1 | tee error.log
-	       
 	elif [ -d ${KERNEL_DIR}/cosmic-clang ];
 	   then
 	       make -kj$(nproc --all) O=out \
@@ -273,16 +276,15 @@ START=$(date +"%s")
 	       CC=clang \
 	       CROSS_COMPILE=aarch64-linux-gnu- \
 	       CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-	       #LD=${LINKER} \
+	       LD=${LINKER} \
 	       #LLVM=1 \
 	       #LLVM_IAS=1 \
-	       #AR=llvm-ar \
-	       #NM=llvm-nm \
-	       #OBJCOPY=llvm-objcopy \
-	       #OBJDUMP=llvm-objdump \
-	       #STRIP=llvm-strip \
+	       AR=llvm-ar \
+	       NM=llvm-nm \
+	       OBJCOPY=llvm-objcopy \
+	       OBJDUMP=llvm-objdump \
+	       STRIP=llvm-strip \
 	       V=$VERBOSE 2>&1 | tee error.log
-	       
 	elif [ -d ${KERNEL_DIR}/neutron ];
 	   then
 	       make -kj$(nproc --all) O=out \
@@ -290,7 +292,7 @@ START=$(date +"%s")
 	       CC=clang \
 	       CROSS_COMPILE=aarch64-linux-gnu- \
 	       CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-	       #LD=${LINKER} \
+	       LD=${LINKER} \
 	       #LLVM=1 \
 	       #LLVM_IAS=1 \
 	       AR=llvm-ar \
@@ -314,7 +316,6 @@ START=$(date +"%s")
 	       STRIP=llvm-strip \
 	       OBJSIZE=llvm-size \
 	       V=$VERBOSE 2>&1 | tee error.log
-	       
 	elif [ -d ${KERNEL_DIR}/sdclang ];
        then
            make -kj$(nproc --all) O=out \
@@ -334,30 +335,30 @@ START=$(date +"%s")
 	       #READELF=llvm-readelf \
 	       #OBJSIZE=llvm-size \
 	       V=$VERBOSE 2>&1 | tee error.log
-	       
     elif [ -d ${KERNEL_DIR}/aosp-clang ];
        then
            make -kj$(nproc --all) O=out \
 	       ARCH=arm64 \
-	       CC=$KERNEL_CLANG \
+	       CC=clang \
+           #HOSTCC=clang \
+	       #HOSTCXX=clang++ \
 	       CLANG_TRIPLE=aarch64-linux-gnu- \
-	       CROSS_COMPILE=$KERNEL_CCOMPILE64 \
-	       CROSS_COMPILE_ARM32=$KERNEL_CCOMPILE32 \
-	       LD=${LINKER} \
-	       AR=llvm-ar \
-	       NM=llvm-nm \
-	       OBJCOPY=llvm-objcopy \
-	       OBJDUMP=llvm-objdump \
-           STRIP=llvm-strip \
+	       CROSS_COMPILE=aarch64-linux-android- \
+	       CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+	       #LD=${LINKER} \
+	       #AR=llvm-ar \
+	       #NM=llvm-nm \
+	       #OBJCOPY=llvm-objcopy \
+	       #OBJDUMP=llvm-objdump \
+           #STRIP=llvm-strip \
 	       #READELF=llvm-readelf \
 	       #OBJSIZE=llvm-size \
 	       V=$VERBOSE 2>&1 | tee error.log
-	       
 	fi
 	
 	echo "**** Verify Image.gz-dtb & dtbo.img ****"
     ls $(pwd)/out/arch/arm64/boot/Image.gz-dtb
-    ls $(pwd)/out/arch/arm64/boot/dtbo.img
+    #ls $(pwd)/out/arch/arm64/boot/dtbo.img
     
 }
 
