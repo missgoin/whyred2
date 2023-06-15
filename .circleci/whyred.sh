@@ -11,7 +11,7 @@ KERNEL_DIR="$(pwd)"
 ##----------------------------------------------------------##
 # Device Name and Model
 MODEL=Xiaomi
-DEVICE=lavender
+DEVICE=whyred
 
 # Kernel Version Code
 #VERSION=
@@ -43,7 +43,7 @@ TANGGAL=$(date +"%F%S")
 # Specify Final Zip Name
 ZIPNAME=SUPER.KERNEL
 FINAL_ZIP=${ZIPNAME}-${DEVICE}-${TANGGAL}.zip
-FINAL_ZIP_ALIAS=Karenullavend-${TANGGAL}.zip
+FINAL_ZIP_ALIAS=Karenulwhyred-${TANGGAL}.zip
 
 ##----------------------------------------------------------##
 # Specify compiler.
@@ -357,7 +357,7 @@ START=$(date +"%s")
 	
 	echo "**** Verify Image.gz-dtb & dtbo.img ****"
     ls $(pwd)/out/arch/arm64/boot/Image.gz-dtb
-    ls $(pwd)/out/arch/arm64/boot/dtbo.img
+    #ls $(pwd)/out/arch/arm64/boot/dtbo.img
     
 }
 
