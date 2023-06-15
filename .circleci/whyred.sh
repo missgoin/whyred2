@@ -11,7 +11,7 @@ KERNEL_DIR="$(pwd)"
 ##----------------------------------------------------------##
 # Device Name and Model
 MODEL=Xiaomi
-DEVICE=whyred
+DEVICE=tulip
 
 # Kernel Version Code
 #VERSION=
@@ -43,7 +43,7 @@ TANGGAL=$(date +"%F%S")
 # Specify Final Zip Name
 ZIPNAME=SUPER.KERNEL
 FINAL_ZIP=${ZIPNAME}-${DEVICE}-${TANGGAL}.zip
-FINAL_ZIP_ALIAS=Karenulwhyred-${TANGGAL}.zip
+FINAL_ZIP_ALIAS=Karenultulip-${TANGGAL}.zip
 
 ##----------------------------------------------------------##
 # Specify compiler.
