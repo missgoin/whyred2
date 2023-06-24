@@ -48,7 +48,7 @@ FINAL_ZIP_ALIAS=Karenultulip-${DATE}.zip
 ##----------------------------------------------------------##
 # Specify compiler.
 
-COMPILER=cosmic-clang
+COMPILER=azure
 
 ##----------------------------------------------------------##
 # Specify Linker
