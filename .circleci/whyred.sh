@@ -43,12 +43,12 @@ TANGGAL=$(date +"%F%S")
 # Specify Final Zip Name
 ZIPNAME=SUPER.KERNEL
 FINAL_ZIP=${ZIPNAME}-${DEVICE}-${DATE}.zip
-FINAL_ZIP_ALIAS=Karenultulip-${DATE>}.zip
+FINAL_ZIP_ALIAS=Karenultulip-${DATE}.zip
 
 ##----------------------------------------------------------##
 # Specify compiler.
 
-COMPILER=azure
+COMPILER=cosmic-clang
 
 ##----------------------------------------------------------##
 # Specify Linker
@@ -237,7 +237,7 @@ START=$(date +"%s")
 	       CC=clang \
 	       CROSS_COMPILE=aarch64-linux-gnu- \
 	       CROSS_COMPILE_ARM32=arm-linux-gnueabi- \
-	       LD=${LINKER} \
+	       #LD=${LINKER} \
 	       #LLVM=1 \
 	       #LLVM_IAS=1 \
 	       AR=llvm-ar \
@@ -276,11 +276,11 @@ START=$(date +"%s")
 	       #LD=${LINKER} \
 	       #LLVM=1 \
 	       #LLVM_IAS=1 \
-	       #AR=llvm-ar \
-	       #NM=llvm-nm \
-	       #OBJCOPY=llvm-objcopy \
-	       #OBJDUMP=llvm-objdump \
-	       #STRIP=llvm-strip \
+	       AR=llvm-ar \
+	       NM=llvm-nm \
+	       OBJCOPY=llvm-objcopy \
+	       OBJDUMP=llvm-objdump \
+	       STRIP=llvm-strip \
 	       V=$VERBOSE 2>&1 | tee error.log
 	       
 	elif [ -d ${KERNEL_DIR}/neutron ];
@@ -375,7 +375,7 @@ function zipping() {
         echo "Zip: $FINAL_ZIP"
         #curl -T $FINAL_ZIP_ALIAS temp.sh; echo
         #curl -T $FINAL_ZIP_ALIAS https://oshi.at; echo
-        curl --upload-file $FINAL_ZIP  https://free.keep.sh; echo
+        curl --upload-file $FINAL_ZIP https://free.keep.sh; echo
     cd ..
 }
 
